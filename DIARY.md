@@ -15,3 +15,9 @@ Enemy riding (mount, flail, bite-scare, flip-and-throw), burrowing (drag-downs, 
 
 ![Slice B — the signature systems](assets/generated/enemy_agent.png)
 
+## 2026-09-22 13:22 — Lore recovered
+
+A found document from the world (see LORE.md) and its sketch now live in this repo's diary_images. Oddworld law: the game's instructions are artifacts of its own world.
+
+![Lore recovered](diary_images/sketch_incident_page.png)
+
