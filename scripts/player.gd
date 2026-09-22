@@ -14,6 +14,10 @@ var invulnerable := false
 var spawn_point: Vector2 = Feel.SPAWN_POINT
 var weapon: Weapon
 var vis: Node2D
+var ride: Ride
+var burrow: Burrow
+var style: StyleTracker = null
+var life_spot: Burrow.LifeSpot = null
 
 var _shape: CollisionShape2D
 var _box: RectangleShape2D
@@ -39,12 +43,32 @@ func _ready() -> void:
 	weapon = Weapon.new()
 	weapon.setup(self)
 	add_child(weapon)
+	ride = Ride.new()
+	ride.setup(self)
+	add_child(ride)
+	burrow = Burrow.new()
+	burrow.setup(self)
+	add_child(burrow)
 
 
 func _physics_process(delta: float) -> void:
 	if dead:
 		return
 	_tick_iframes(delta)
+
+	# buried: the burrow system owns movement, drag-down, suffocation, surfacing
+	if burrow.tick(delta):
+		weapon.charging = false
+		_apply_collider()
+		return
+
+	# mounted: the ride system owns the rider (bite / flip-and-throw / dismount)
+	if ride.active:
+		ride.tick(delta)
+		_fire_prev = Input.is_action_pressed("fire")
+		weapon.charging = false
+		return
+
 	_read_fire()
 
 	var axis := Input.get_axis("move_left", "move_right")
@@ -57,6 +81,9 @@ func _physics_process(delta: float) -> void:
 
 	var jump_want := _jump_queued or Input.is_action_just_pressed("jump")
 	_jump_queued = false
+	if jump_want and not is_on_floor() and Input.is_action_pressed("move_down"):
+		if ride.try_mount() != null:
+			return
 	if jump_want and is_on_floor():
 		velocity.y = Feel.JUMP_VELOCITY
 		_squash(Feel.SQUASH_JUMP_SCALE)
@@ -91,6 +118,21 @@ func aim_dir() -> Vector2:
 
 func collider_height() -> float:
 	return _box.size.y
+
+
+func is_burrowed() -> bool:
+	return burrow != null and burrow.burrowing
+
+
+func add_style_kind(kind: String) -> void:
+	if style != null:
+		style.add(kind)
+
+
+## Called by the ride system when the mount dies under the rider.
+func on_mount_killed() -> void:
+	if ride != null:
+		ride.on_mount_killed()
 
 
 func _read_fire() -> void:
@@ -135,16 +177,23 @@ func _squash(s: Vector2) -> void:
 
 # -- combat --
 
-func hit() -> bool:
-	if dead or invulnerable:
+func hit(force := false) -> bool:
+	# buried is invulnerable (bullets pass overhead); force = suffocation kill
+	if dead or (burrow != null and burrow.burrowing and not force):
 		return false
+	if invulnerable and not force:
+		return false
+	if ride != null and ride.active:
+		ride.end()  # dismount first, then normal death rules
 	dead = true
 	lives -= 1
 	velocity = Vector2.ZERO
+	ducking = false
 	weapon.charging = false
 	weapon.charge_t = 0.0
 	vis.visible = false
-	vis.modulate.a = 1.0
+	vis.modulate = Color.WHITE
+	vis.position = Vector2.ZERO
 	_shape.set_deferred("disabled", true)
 	Feel.spawn_explosion(get_parent(), global_position, Feel.PLAYER_SIZE * Feel.EXPLOSION_SCALE)
 	died.emit(lives)
@@ -157,6 +206,9 @@ func respawn(pos: Vector2) -> void:
 	ducking = false
 	velocity = Vector2.ZERO
 	vis.visible = true
+	vis.modulate = Color.WHITE
+	vis.position = Vector2.ZERO
+	collision_layer = 1 << 1
 	_shape.set_deferred("disabled", false)
 	invulnerable = true
 	_iframes_left = Feel.RESPAWN_IFRAMES

@@ -17,17 +17,26 @@ var spawned_count := 0
 var wave_enemies: Array = []
 var player: Player
 var game_over_layer: CanvasLayer
+var style: StyleTracker
+var wave2_started := false
+var wave2_spawned := 0
+var wave2_done := false
 
 var _spawn_t: float = Feel.WAVE_SPAWN_INTERVAL
+var _wave2_t := 0.0
+var _extra_platform_built := false
 var _hud_lives: Label
 var _hud_score: Label
 var _hud_kills: Label
 var _hud_wave: Label
+var _hud_style: Label
 
 
 func _ready() -> void:
 	_build_room()
 	_build_player()
+	_build_style()
+	_build_life_spot()
 	_build_hud()
 	_build_game_over()
 
@@ -36,6 +45,7 @@ func _physics_process(delta: float) -> void:
 	if game_ended:
 		return
 	_tick_spawner(delta)
+	_tick_wave2(delta)
 	_maybe_clear_wave()
 
 
@@ -46,6 +56,7 @@ func _process(_delta: float) -> void:
 	_hud_score.text = "SCORE %d" % score
 	_hud_kills.text = "KILLS %d" % kills
 	_hud_wave.text = "WAVE %d CLEARED" % wave if wave_cleared_done else "WAVE %d" % wave
+	_hud_style.text = "STYLE %d" % (style.points if style != null else 0)
 
 
 # -- room --
@@ -87,6 +98,21 @@ func _build_player() -> void:
 	player.died.connect(_on_player_died)
 
 
+func _build_style() -> void:
+	style = StyleTracker.new()
+	player.style = style
+	# every STYLE_PER_LIFE points grants +1 life (spec: scoring.style_bonus)
+	style.life_granted.connect(func(_total: int): player.lives += 1)
+
+
+func _build_life_spot() -> void:
+	var spot := Burrow.LifeSpot.new()
+	spot.position = Feel.LIFE_SPOT_RECT.get_center()
+	add_child(spot)
+	player.life_spot = spot
+	spot.found.connect(func(): score += Feel.SCORE_PER_KILL)
+
+
 func _tick_spawner(delta: float) -> void:
 	if spawning_done:
 		return
@@ -109,6 +135,40 @@ func _spawn_agent() -> void:
 	spawned_count += 1
 
 
+# -- wave 2 (milestone B: 6 more agents + one extra platform) --
+
+func _tick_wave2(delta: float) -> void:
+	if wave2_started or not wave_cleared_done:
+		return
+	_wave2_t += delta
+	if _wave2_t < Feel.WAVE2_DELAY:
+		return
+	wave2_started = true
+	wave = 2
+	wave_cleared_done = false
+	_spawn_extra_platform()
+	for i in Feel.WAVE2_AGENT_COUNT:
+		_spawn_wave2_agent(i)
+
+
+func _spawn_extra_platform() -> void:
+	if _extra_platform_built:
+		return
+	_extra_platform_built = true
+	_block(Feel.EXTRA_PLATFORM, Feel.COLOR_PLATFORM)
+
+
+func _spawn_wave2_agent(i: int) -> void:
+	var e: EnemyAgent = ENEMY_SCENE.instantiate()
+	e.target = player
+	e.bullet_parent = self
+	e.position = Vector2(Feel.WAVE_SPAWN_X - float(i) * Feel.WAVE_SPAWN_SPACING, Feel.WAVE_SPAWN_Y)
+	add_child(e)
+	wave_enemies.append(e)
+	e.died.connect(_on_enemy_died.bind(e))
+	wave2_spawned += 1
+
+
 func _on_enemy_died(points: int, e: EnemyAgent) -> void:
 	score += points
 	kills += 1
@@ -118,6 +178,8 @@ func _on_enemy_died(points: int, e: EnemyAgent) -> void:
 func _maybe_clear_wave() -> void:
 	if spawning_done and not wave_cleared_done and wave_enemies.is_empty():
 		wave_cleared_done = true
+		if wave2_started:
+			wave2_done = true
 		wave_cleared.emit()
 
 
@@ -156,6 +218,7 @@ func _build_hud() -> void:
 	_hud_score = _hud_label(layer, Vector2(16, 40))
 	_hud_kills = _hud_label(layer, Vector2(16, 68))
 	_hud_wave = _hud_label(layer, Vector2(790, 12))
+	_hud_style = _hud_label(layer, Vector2(790, 40))
 
 
 func _hud_label(layer: CanvasLayer, pos: Vector2) -> Label:

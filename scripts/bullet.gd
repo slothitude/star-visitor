@@ -72,7 +72,14 @@ func _on_body_entered(body: Node2D) -> void:
 		pierce_left -= 1
 		if pierce_left < 0:
 			despawn()
+	elif not from_player and body.is_in_group("enemy") and body.get("mounted") == true:
+		# friendly fire: a mounted mount soaks its own faction's bullets
+		if body.has_method("take_hit"):
+			body.take_hit(damage)
+		despawn()
 	elif not from_player and body.is_in_group("player"):
+		if body.is_burrowed():
+			return  # buried: bullets pass overhead, no hit, no despawn
 		if body.has_method("hit"):
 			body.hit()
 		despawn()

@@ -73,6 +73,41 @@ const STYLE_PER_LIFE: int = 5000
 # -- signature systems (spec; milestone B) --
 const BURROW_SUFFOCATE_TIME: float = 4.0
 
+# -- enemy ride (spec: signature_systems.enemy_ride; milestone B) --
+const RIDE_GRAB_RADIUS_X: float = 52.0
+const RIDE_GRAB_RADIUS_Y: float = 120.0
+const RIDE_FLAIL_SPEED: float = 150.0
+const RIDE_FLAIL_TURN_TIME: float = 0.45
+const RIDE_DISMOUNT_HOP: float = 0.5
+const THROW_SPEED: float = 520.0
+const THROW_LOFT_MULT: float = 0.5
+const THROW_FLOOR_GRACE: float = 0.08
+const THROW_DAMAGE: int = 2
+const THROW_LIFE: float = 1.2
+const BITE_RADIUS: float = 190.0
+const BITE_FLEE_TIME: float = 2.5
+const FLEE_SPEED_MULT: float = 1.6
+
+# -- burrow (spec: signature_systems.burrow; milestone B) --
+const BURROW_ENTER_TIME: float = 0.6
+const BURROW_MOVE_SPEED: float = 120.0
+const BURROW_DRAG_RADIUS: float = 44.0
+const BURROW_WARN_AT: float = 3.0
+const BURROW_SINK: float = 14.0
+
+# -- style stub (spec: scoring.style_bonus; milestone B) --
+const STYLE_RIDE: int = 150
+const STYLE_THROW_HIT: int = 200
+const STYLE_BURROW_KILL: int = 250
+
+# -- milestone B room constants --
+const ROOM_MIN_X: float = 24.0
+const ROOM_MAX_X: float = 936.0
+const LIFE_SPOT_RECT: Rect2 = Rect2(470, 440, 60, 60)
+const WAVE2_AGENT_COUNT: int = 6
+const WAVE2_DELAY: float = 1.2
+const EXTRA_PLATFORM: Rect2 = Rect2(430, 200, 160, 16)
+
 # -- wave 1 (spec: beat_sheet_v1 "wave1 agents x6") --
 const WAVE1_AGENT_COUNT: int = 6
 const WAVE_SPAWN_INTERVAL: float = 0.8
