@@ -21,3 +21,11 @@ A found document from the world (see LORE.md) and its sketch now live in this re
 
 ![Lore recovered](diary_images/sketch_incident_page.png)
 
+## 2026-09-22 23:51 — ROADMAP: slice C→E to itch
+
+Steps: 1) Slice C: mini-boss (robot with laser) + wave 2 heavies + heavy enemy type. 2) Slice D: first boss (vehicle with missile arc + dash) + level-clear tally. 3) Slice E: end-to-end replay pass (full level playable start-to-finish). 4) Title screen + audio + PSX-style visual pass. 5) Export Web. 6) Create itch page + butler push. 7) Critic playtest + fix cycle. 8) Asset pack. DONE: A B green (137 checks), repo live, lore (incident report) + sketches complete.
+
+## 2026-09-22 23:52 — ROADMAP to itch
+
+1) Slice C: mini-boss + heavies. 2) Slice D: first boss + tally. 3) Slice E: end-to-end replay. 4) Title + audio + PSX visual. 5) Export + itch + critic. DONE: A+B green (137 checks).
+
